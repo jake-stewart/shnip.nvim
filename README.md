@@ -7,7 +7,7 @@ require("shnip").setup({
     leader = "<c-f>",
     overrides = {},
     keys = {
-        ["print"]    = "<down>",
+        ["print"]    = "<c-j>",
         ["debug"]    = "<c-d>",
         ["error"]    = "<c-x>",
         ["while"]    = "<c-w>",
