@@ -1,0 +1,2 @@
+# shnip
+shit snippets
