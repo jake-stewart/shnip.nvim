@@ -2,7 +2,7 @@
 shit snippets
 
 ### example config
-```
+```lua
 require("shnip").setup({
     leader = "<c-f>",
     overrides = {},
