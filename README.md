@@ -50,8 +50,7 @@ require("shnip").setup(
 ### adding your own languages
 
 ```lua
- -- table of filetypes, table of snippets
-require("shnip").addFtSnippets({"cpp"}, {
+require("shnip").addFtSnippets("holyc", {
     ["print"] = 'printf("\\n");<esc>hhhhi',
     ["debug"] = "printf();<esc>hi",
     ["while"] = "while () {<CR>}<esc>k$hhi",

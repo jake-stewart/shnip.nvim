@@ -1,4 +1,5 @@
 local snippetLeader = "<c-f>"
+local ftSnippets = {}
 local ftSnippetOverrides = {}
 local ftSnippetKeys = {}
 
@@ -6,7 +7,10 @@ local function snippet(key, output, opts)
     vim.keymap.set("i", snippetLeader .. key, output, opts)
 end
 
-local function setFiletypeSnippets(snippets, overrides)
+local function setFiletypeSnippets()
+    local snippets = ftSnippets[vim.o.ft]
+    if not snippets then return end
+    local overrides = ftSnippetOverrides[vim.o.ft] or {}
     for key, value in pairs(snippets) do
         if key == "extra" then
             for k, v in pairs(value) do
@@ -32,18 +36,17 @@ local function setFiletypeSnippets(snippets, overrides)
     end
 end
 
-local function addFtSnippets(filetypes, snippets)
+local function addFtSnippets(ft, snippets)
+    ftSnippets[ft] = snippets
     vim.api.nvim_create_autocmd("FileType", {
-        pattern = table.concat(filetypes, ","),
+        pattern = ft,
         group = "FiletypeSnippets",
-        callback = function()
-            setFiletypeSnippets(snippets, ftSnippetOverrides[vim.o.ft] or {})
-        end
+        callback = setFiletypeSnippets
     })
 end
 
 local function createFtSnippets()
-    addFtSnippets({"python"}, {
+    addFtSnippets("python", {
         extra = {
             ["-"] = "____<left><left>"
         },
@@ -62,7 +65,7 @@ local function createFtSnippets()
         ["try"] = "try:<CR>...<CR>except Exception as e:<CR>...<ESC>kkA<BS><BS><BS>",
     })
 
-    addFtSnippets({"bash", "sh"}, {
+    local shellSnippets = {
         ["print"] = 'echo<space>""<left>',
         ["debug"] = "echo<space>",
         ["error"] = "echo  >/dev/stderr<ESC>Bhi",
@@ -75,9 +78,12 @@ local function createFtSnippets()
         ["case"] = ")<CR>;;<esc>k$i",
         ["default"] = "*)<CR>;;<esc>O",
         ["function"] = "() {<CR>}<esc>k$F(i",
-    })
+    }
 
-    addFtSnippets({"javascript", "typescript", "typescriptreact"}, {
+    addFtSnippets("bash", shellSnippets)
+    addFtSnippets("sh", shellSnippets)
+
+    local jsSnippets = {
         ["print"] = 'console.log("");<esc>hhi',
         ["debug"] = "console.log();<esc>hi",
         ["error"] = "console.error();<esc>hi",
@@ -94,9 +100,12 @@ local function createFtSnippets()
         ["class"] = "class  {<CR>}<esc>k$hi",
         ["struct"] = "interface  {<CR>}<esc>k$hi",
         ["try"] = "try {<CR>}<CR>catch (error) {<CR>}<ESC>kkO",
-    })
+    }
+    addFtSnippets("javascript", jsSnippets)
+    addFtSnippets("typescript", jsSnippets)
+    addFtSnippets("typescriptreact", jsSnippets)
 
-    addFtSnippets({"c"}, {
+    addFtSnippets("c", {
         ["print"] = 'printf("\\n");<esc>hhhhi',
         ["debug"] = "printf();<esc>hi",
         ["while"] = "while () {<CR>}<esc>k$hhi",
@@ -112,7 +121,7 @@ local function createFtSnippets()
         ["try"] = "try {<CR>}<CR>catch {<CR>}<ESC>kkO",
     })
 
-    addFtSnippets({"cpp"}, {
+    addFtSnippets("cpp", {
         ["print"] = 'printf("\\n");<esc>hhhhi',
         ["debug"] = "printf();<esc>hi",
         ["while"] = "while () {<CR>}<esc>k$hhi",
@@ -130,7 +139,7 @@ local function createFtSnippets()
         ["try"] = "try {<CR>}<CR>catch {<CR>}<ESC>kkO",
     })
 
-    addFtSnippets({"java"}, {
+    addFtSnippets("java", {
         ["print"] = 'system.out.println("");<esc>hhi',
         ["debug"] = "system.out.println();<esc>hi",
         ["while"] = "while () {<CR>}<esc>k$hhi",
@@ -148,7 +157,7 @@ local function createFtSnippets()
         ["try"] = "try {<CR>}<CR>catch {<CR>}<ESC>kkO",
     })
 
-    addFtSnippets({"cs"}, {
+    addFtSnippets("cs", {
         ["print"] = 'Debug.Log("");<esc>hhi',
         ["debug"] = "Util.Log();<left><left>",
         ["while"] = "while () {<CR>}<esc>k$hhi",
@@ -166,7 +175,7 @@ local function createFtSnippets()
         ["try"] = "try {<CR>}<CR>catch {<CR>}<ESC>kkO",
     })
 
-    addFtSnippets({"lua"}, {
+    addFtSnippets("lua", {
         ["print"] = 'print("")<left><left>',
         ["debug"] = "vim.print()<left>",
         ["while"] = "while true do<CR>end<esc>k$BB\"_ciw",
@@ -179,7 +188,7 @@ local function createFtSnippets()
         ["try"] = "pcall(function()<CR>end)<esc>O",
     })
 
-    addFtSnippets({"rust"}, {
+    addFtSnippets("rust", {
         ["print"] = 'println!("");<esc>$F"i',
         ["debug"] = "dbg!(&);<esc>hi",
         ["while"] = "while  {<CR>}<esc>k$hi",
@@ -193,7 +202,7 @@ local function createFtSnippets()
         ["function"] = "fn () {<CR>}<esc>k$F(i",
     })
 
-    addFtSnippets({"go"}, {
+    addFtSnippets("go", {
         ["print"] = 'fmt.Println("")<esc>hi',
         ["debug"] = "fmt.Println()<esc>i",
         ["while"] = "for  {<CR>}<esc>k$hi",
@@ -251,6 +260,9 @@ local function setup(opts)
     ftSnippetKeys = opts.keys or {}
     vim.api.nvim_create_augroup("FiletypeSnippets", { clear = true })
     createFtSnippets()
+    if vim.o.ft then
+        setFiletypeSnippets()
+    end
 end
 
 return {
